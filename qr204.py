@@ -1,3 +1,5 @@
+
+
 class QR204(object):
 
 
@@ -9,31 +11,31 @@ class QR204(object):
         self._printer.write(b'\x1b\x37')
         self._printer.write(b'\x14\x96\x50')
         self._printer.write(b'\x12\x23\xff')
-    
+
     def newline(self, n=3):
         self._printer.write(b'\x0a' * n)
 
     def inverse_enbl(self):
         self._printer.write(b'\x1d\x42\x01')
-        
+
     def inverse_dsbl(self):
         self._printer.write(b'\x1d\x42\x00')
 
     def bold_enbl(self):
         self._printer.write(b'\x1b\x45\x01')
-        
+
     def bold_dsbl(self):
         self._printer.write(b'\x1b\x45\x00')
 
     def font_b(self):
         self._printer.write(b'\x1b\x21\x01')
-        
+
     def font_a(self):
         self._printer.write(b'\x1b\x21\x00')
 
     def uline_enbl(self):
         self._printer.write(b'\x1b\x2d\x01')
-        
+
     def uline_dsbl(self):
         self._printer.write(b'\x1b\x2d\x00')
 
@@ -47,7 +49,10 @@ class QR204(object):
 
     def write(self, text):
         self._printer.write(text.encode())
-        
+
+    def writeln(self, text):
+        self.write(text)
+        self.write('\n')
 
 '''Example
 
