@@ -1,6 +1,5 @@
 import gc
 import network
-import machine
 
 
 ap_if = network.WLAN(network.AP_IF)
