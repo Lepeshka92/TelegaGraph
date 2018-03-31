@@ -35,11 +35,12 @@ class TelegramBot(object):
 
         if len(jo['result']) > 0:
             self.offset = jo['result'][0]['update_id'] + 1
-            if 'text' in jo['result'][0]['message']:
-                return (jo['result'][0]['message']['chat']['id'],
-                        str(jo['result'][0]['message']['from']['first_name']),
-                        str(jo['result'][0]['message']['text']),
-                        jo['result'][0]['message']['date'])
+            if 'message' in jo['result'][0]:
+                if 'text' in jo['result'][0]['message']:
+                    return (jo['result'][0]['message']['chat']['id'],
+                            str(jo['result'][0]['message']['from']['first_name']),
+                            str(jo['result'][0]['message']['text']),
+                            jo['result'][0]['message']['date'])
 
         return None
 
@@ -48,3 +49,4 @@ class TelegramBot(object):
             message = self.update()
             if message:
                 handler(message)
+
