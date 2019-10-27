@@ -1,52 +1,62 @@
-import urequests as requests
-import ujson as json
+import time
+import gc
+import ujson
+import urequests
 
 
-class TelegramBot(object):
-
-
+class TelegramBot:
+    
     def __init__(self, token):
-        self.token = token
-        self.offset = 0
-        self._url = 'https://api.telegram.org/bot' + token
+        self.url = 'https://api.telegram.org/bot' + token
 
-    def _quote(self, t):
-        return '%'.join('{:02x}'.format(c) for c in t)
+        self.kbd = {
+            'keyboard': [],
+            'resize_keyboard': True,
+            'one_time_keyboard': True}
 
-    def send(self, chat_id, text):
-        url = self._url + '/sendMessage?chat_id=' + str(chat_id) + \
-              '&text=%' + self._quote(text.encode('utf-8'))
+        self.upd = {
+            'offset': 0,
+            'limit': 1,
+            'timeout': 30,
+            'allowed_updates': ['message']}
 
+    def send(self, chat_id, text, keyboard=None):
+        data = {'chat_id': chat_id, 'text': text}
+        if keyboard:
+            self.kbd['keyboard'] = keyboard
+            data['reply_markup'] = json.dumps(self.kbd)
         try:
-            requests.get(url)
-            return True
+            urequests.post(self.url + '/sendMessage', json=data)
         except:
-            return False
+            pass
+        finally:
+            gc.collect()
 
     def update(self):
-        url = self._url + '/getUpdates?timeout=30&limit=1&offset=' + \
-              str(self.offset)
-
+        result = []
         try:
-            r = requests.get(url)
-            jo = json.loads(r.text)
+            jo = urequests.post(self.url + '/getUpdates', json=self.upd).json() 
         except:
             return None
-
-        if len(jo['result']) > 0:
-            self.offset = jo['result'][0]['update_id'] + 1
-            if 'message' in jo['result'][0]:
-                if 'text' in jo['result'][0]['message']:
-                    return (jo['result'][0]['message']['chat']['id'],
-                            str(jo['result'][0]['message']['from']['first_name']),
-                            str(jo['result'][0]['message']['text']),
-                            jo['result'][0]['message']['date'])
-
-        return None
+        finally:
+            gc.collect()
+        if 'result' in jo:
+            for item in jo['result']:
+                if 'text' in item['message']:
+                    if 'username' not in item['message']['chat']:
+                        item['message']['chat']['username'] = 'notset'
+                    result.append((item['message']['chat']['id'],
+                                   item['message']['chat']['username'],
+                                   item['message']['text']))
+        if len(result) > 0:
+            self.upd['offset'] = jo['result'][-1]['update_id'] + 1
+            
+        return result
 
     def listen(self, handler):
         while True:
-            message = self.update()
-            if message:
-                handler(message)
-
+            messages = self.update()
+            if messages:
+                handler(messages)
+            time.sleep(3)
+            gc.collect()
