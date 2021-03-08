@@ -1,29 +1,50 @@
 import gc
-from machine import UART
-
+import time
+import machine
 import api
-from qr204 import QR204
+import qr204
 
-printer = QR204(UART(1, 9600))
-telegram = api.TelegramBot('API-KEY')
+
+gc.enable()
+
+tg = api.TelegramBot('API-KEY')
+printer = qr204.QR204(machine.UART(2, 9600, tx=17, rx=16))
+
+def convert_time(s):
+    date = time.gmtime(s - 946674000)
+    fmt = '{:04}/{:02}/{:02} {:02}:{:02}'
+    return fmt.format(*date[:5])
 
 def message_handler(messages):
     for message in messages:
         if message[2] == '/start':
-            telegram.send(message[0], 'Send me Message')
+            tg.send(message[0], 'This bot prints messages to thermal printer')
+        elif message[2] == '/info':
+            tg.send(message[0], 'My IP: ' + sta_if.ifconfig()[0])
         else:
-            printer.uline_enbl()
-            printer.write('From: ')
-            printer.write(message[1])
-            printer.uline_dsbl()
+            printer.awake()
+            if not printer.paper():
+                tg.send(message[0], 'No paper')
+            else:
+                printer.font_b()
+                printer.write('Sender: ')
+                printer.write(message[1])
+                printer.newline(1)
+                printer.write('Date: ')
+                printer.write(convert_time(message[3]))
+                printer.newline(1)
+                
+                printer.font_a()
+                printer.bold_enbl()
+                printer.write('_ ' * 16)
+                printer.bold_dsbl()
+                printer.newline(1)
+                printer.write(message[2])
+                printer.newline(1)
+                printer.bold_enbl()
+                printer.write('_ ' * 16)
+                printer.bold_dsbl()
+                printer.newline()
+            printer.sleep()
 
-            printer.newline(1)
-            printer.write(message[2])
-            printer.newline(1)
-            printer.write('_ ' * 16)
-            printer.newline()
-
-            telegram.send(message[0], 'Message printed!')
-    gc.collect()
-
-telegram.listen(message_handler)
+tg.listen(message_handler)
