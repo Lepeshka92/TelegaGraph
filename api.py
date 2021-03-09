@@ -56,7 +56,6 @@ class TelegramBot(object):
                                    item['message']['chat']['username'],
                                    item['message']['text'],
                                    item['message']['date']))
-        if len(result) > 0:
             self.upd['offset'] = jo['result'][-1]['update_id'] + 1
         
         return result
