@@ -14,7 +14,7 @@ class TelegramBot(object):
     def request(self, path, data):
         if not self.addr:
             self.addr = socket.getaddrinfo('api.telegram.org', 443)[0][-1]
-        
+
         r = None
         s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         try:
@@ -36,7 +36,7 @@ class TelegramBot(object):
             print(e)
         finally:
             s.close()
-        
+
         return r
     
     def update(self):
@@ -50,10 +50,12 @@ class TelegramBot(object):
         if 'result' in jo and len(jo['result']) > 0:
             for item in jo['result']:
                 if 'text' in item['message']:
-                    if 'username' not in item['message']['chat']:
-                        item['message']['chat']['username'] = 'notset'
+                    sender = item['message']['from'].get('username', 'unknown')
+                    title = item['message']['chat'].get('title')
+                    if title:
+                        sender = '{} | {}'.format(title, sender)
                     result.append((item['message']['chat']['id'],
-                                   item['message']['chat']['username'],
+                                   sender,
                                    item['message']['text'],
                                    item['message']['date']))
             self.upd['offset'] = jo['result'][-1]['update_id'] + 1
