@@ -47,7 +47,7 @@ class TelegramBot(object):
         except Exception as e:
             print(e)
             return None
-        if 'result' in jo:
+        if 'result' in jo and len(jo['result']) > 0:
             for item in jo['result']:
                 if 'text' in item['message']:
                     if 'username' not in item['message']['chat']:
