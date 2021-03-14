@@ -1,4 +1,5 @@
 import gc
+import os
 import time
 import machine
 import api
@@ -6,6 +7,12 @@ import qr204
 
 
 gc.enable()
+
+# Для того, чтобы печатались фото нужно указать адрес сайта в img_url
+# lepeshka.pythonanywhere.com указан для примера и проверки работы
+# 
+#tg = api.TelegramBot('API-KEY',
+#                     img_url='lepeshka.pythonanywhere.com')
 
 tg = api.TelegramBot('API-KEY')
 printer = qr204.QR204(machine.UART(2, 9600, tx=17, rx=16))
@@ -39,12 +46,17 @@ def message_handler(messages):
                 printer.write('_ ' * 16)
                 printer.bold_dsbl()
                 printer.newline(1)
-                printer.write(message[2])
-                printer.newline(1)
-                printer.bold_enbl()
-                printer.write('_ ' * 16)
-                printer.bold_dsbl()
-                printer.newline()
+                if 'data.bin' in os.listdir():
+                    printer.print_image()
+                    os.remove('data.bin')
+                else:
+                    printer.write(message[2])
+                    printer.newline(1)
+                    printer.bold_enbl()
+                    printer.write('_ ' * 16)
+                    printer.bold_dsbl()
+                    printer.newline()
             printer.sleep()
 
+printer.sleep()
 tg.listen(message_handler)
