@@ -11,7 +11,7 @@ class QR204(object):
         self._uart.write(b"\x1b\x76\x00")
         self._uart.write(b"\x1b\x40")
         self._uart.write(b"\x1b\x37")
-        self._uart.write(b"\x14\x96\x50")
+        self._uart.write(b"\x07\x50\x02") # heating dots/heat time/heat interval
         self._uart.write(b"\x12\x23\xff")
 
     def newline(self, n=3):
@@ -71,3 +71,15 @@ class QR204(object):
                 break
             time.sleep(0.1)
         return res == 0
+    
+    def print_image(self):
+        self.newline(1)
+        
+        with open('data.bin', 'rb') as fd:
+            line = fd.read(48)
+            while line:
+                self._uart.write(b'\x12\x2a\x01\x30')
+                self._uart.write(line)
+                line = fd.read(48)
+        
+        self.newline()
